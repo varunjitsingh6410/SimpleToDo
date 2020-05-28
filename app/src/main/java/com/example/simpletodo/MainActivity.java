@@ -1,8 +1,10 @@
 package com.example.simpletodo;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -13,11 +15,15 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+
+
     List<String> items;
 
     Button btnAdd;
     EditText etItem;
     RecyclerView rvItems;
+
+    ItemsAdapter itemsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,16 +34,32 @@ public class MainActivity extends AppCompatActivity {
         etItem = findViewById(R.id.etItem);
         rvItems = findViewById(R.id.rvItems);
 
-        etItem.setText("I'm doing this from java");
 
         items = new ArrayList<>();
-        items.add("test 1");
-        items.add("test 2");
-        items.add("test 3");
-        items.add("test 4");
 
-        ItemsAdapter itemsAdapter = new ItemsAdapter(items);
+        ItemsAdapter.OnLongClickListener onLongClickListener = new ItemsAdapter.OnLongClickListener()
+        {
+            @Override
+            public void onItemLongClicked(int position) {
+                items.remove(position);
+                itemsAdapter.notifyItemRemoved(position);
+                Toast.makeText(getApplicationContext(), "Item was removed", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        itemsAdapter = new ItemsAdapter(items, onLongClickListener);
         rvItems.setAdapter(itemsAdapter);
         rvItems.setLayoutManager(new LinearLayoutManager(this));
+
+        btnAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String todoItem = etItem.getText().toString();
+                items.add(todoItem);
+                itemsAdapter.notifyItemInserted(items.size()-1);
+                etItem.setText("");
+                Toast.makeText(getApplicationContext(), "Item was added", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

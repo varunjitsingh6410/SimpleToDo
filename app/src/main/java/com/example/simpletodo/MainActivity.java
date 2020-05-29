@@ -1,5 +1,6 @@
 package com.example.simpletodo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -7,6 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,7 +25,9 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-
+    public static final String KEY_ITEM_TEXT = "item_test";
+    public static final String KEY_ITEM_POSITION = "item_position";
+    public static final int EDIT_TEXT_CODE = 20;
 
     List<String> items;
 
@@ -56,7 +60,18 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        itemsAdapter = new ItemsAdapter(items, onLongClickListener);
+        ItemsAdapter.OnClickListener onClickListener = new ItemsAdapter.OnClickListener() {
+            @Override
+            public void onItemClicked(int position) {
+                // Toast.makeText(getApplicationContext(), "Item was clicked", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(MainActivity.this, EditActivity.class);
+                i.putExtra(KEY_ITEM_TEXT, items.get(position));
+                i.putExtra(KEY_ITEM_POSITION, position);
+                startActivityForResult(i, EDIT_TEXT_CODE);
+            }
+        };
+
+        itemsAdapter = new ItemsAdapter(items, onLongClickListener, onClickListener);
         rvItems.setAdapter(itemsAdapter);
         rvItems.setLayoutManager(new LinearLayoutManager(this));
 
@@ -71,6 +86,24 @@ public class MainActivity extends AppCompatActivity {
                 saveItems();
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode == RESULT_OK && requestCode == EDIT_TEXT_CODE)
+        {
+            String itemText = data.getStringExtra(KEY_ITEM_TEXT);
+            int position = data.getExtras().getInt(KEY_ITEM_POSITION);
+
+            items.set(position, itemText);
+            itemsAdapter.notifyItemChanged(position);
+            saveItems();
+            Toast.makeText(getApplicationContext(), "Update succesful", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Log.w("MainAcitivity", "Unknown call to onActivityResult");
+        }
     }
 
     private File getDataFile()
